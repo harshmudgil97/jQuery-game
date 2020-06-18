@@ -1,131 +1,131 @@
-var buttonColours = ["red", "blue", "green", "yellow"];
+var gameColors = ["red","green","yellow","blue"];
 var gamePattern = [];
-var userClickedPattern = [];
+var userPattern = [];
+var temp = [];
 
 var level = 0;
-var template = [];
-var counter = 0;
 
-function wrongAns() {
+function wrongAlert(iconName){
+  var alertAudio = new Audio("sounds/wrong.mp3");
+
+  alertAudio.play();
+
   $("body").addClass("game-over");
-  $("h1").text("Game Over, Press Any Key to Restart")
-
-  var audio = new Audio("sounds/wrong.mp3");
-  audio.play();
-
-  setTimeout(function() {
+  setTimeout(function () {
     $("body").removeClass("game-over");
   }, 200);
 
-  level = 0;
+  $("h1").html("Game Over, Press Any Key to Restart");
 
 
-  while (gamePattern.length > 0) {
+
+  while(temp.length){
+    temp.pop();
+  }
+
+  while(gamePattern.length){
     gamePattern.pop();
   }
 
-  while (userClickedPattern.length > 0) {
-    userClickedPattern.pop();
+  while(userPattern.length){
+    userPattern.pop();
   }
-  while (template.length > 0) {
-    template.pop();
-  }
-}
 
-function animantePress(currentColour) {
-  $("." + currentColour).addClass("pressed");
+  level = 0;
+ }
 
-  setTimeout(function() {
-    $("." + currentColour).removeClass("pressed");
-  }, 100);
-}
-
-function playSound(crossSound) {
-
-  var audio = new Audio("sounds/" + crossSound + ".mp3");
+function experienceHandler(iconName){
+  var audioName = "sounds/"+iconName +".mp3";
+  var audio = new Audio(audioName);
   audio.play();
 
-  $("#" + crossSound).fadeOut(100).fadeIn(100);
+  $("#"+iconName).addClass("pressed");
+
+  setTimeout(function () {
+    $("#"+iconName).removeClass("pressed")
+
+  }, 150);
+
 }
 
-function nextSequence() {
-  level++;
-  while (template.length > 0) {
-    template.pop();
+function patternGenerator(){
+  level++
+  var randomNum = Math.floor(Math.random()*4);
+  for(var i = 0; i<gameColors.length; i++){
+    if(i==randomNum){
+      gamePattern.push(gameColors[i]);
+      experienceHandler(gameColors[i]);
+    }
   }
 
-  $("h1").text("Level " + level);
-  var randomNumber = Math.floor(Math.random() * 4);
-  var randomChosenColour = buttonColours[randomNumber];
-
-  gamePattern.push(randomChosenColour);
-
-
-  playSound(randomChosenColour);
-  animantePress(randomChosenColour);
-
+  while(temp.length){
+    temp.pop();
+  }
 }
 
-
-
-$(".btn").on("click", function() {
-
-  var userChosenColour = this.id;
-  playSound(userChosenColour);
-  animantePress(userChosenColour);
-  if (level == 0) {
-    wrongAns();
-  } else {
-
-    template.push(userChosenColour);
-
+$(".btn").on("click",function(){
     var flag = 0;
-    if (template.length > userClickedPattern.length) {
-      for (var i = 0; i < gamePattern.length; i++) {
-        if (template[i] == gamePattern[i]) {
-          flag = 1;
-        } else {
-          flag = 0;
-          wrongAns();
-        }
+  if(level == 0){
+    flag = -1;
+  }
 
-      }
-    } else {
-      for (var i = 0; i < userClickedPattern.length; i++) {
-        if (template[i] == userClickedPattern[i]) {
-          break;
-        } else {
-          flag = 0;
-          wrongAns();
+  else{
+
+
+
+    temp.push(this.id);
+    if(temp.length > userPattern.length){
+      for(var i = 0; i<temp.length;i++){
+        if(temp[i]==gamePattern[i]){
+          flag = 1;
+        }
+        else{
+
+          flag = -1;
         }
       }
     }
 
-    if (flag == 1) {
-        userClickedPattern.push(userChosenColour);
-        setTimeout(function() {
-          counter++;
-          console.log(counter);
+    else{
+      for(var i = 0; i<temp.length;i++){
+        if(temp[i]==userPattern[i]){
+          experienceHandler(this.id);
+          continue;
+        }
 
-          nextSequence();
-        }, 480);
+        else{
+          flag = -1;
 
-        flag = 0;
-
+        }
       }
+    }
+  }
 
+  if(flag == 1){
+    userPattern.push(this.id);
+
+    experienceHandler(this.id);
+
+    setTimeout(function () {
+      patternGenerator(this.id);
+    }, 550);
+
+    flag = 0;
+  }
+
+  else if(flag == -1){
+    wrongAlert(this.id);
+    experienceHandler(this.id);
+    flag = 0;
   }
 
 });
 
 
-$(document).keypress(function() {
+$(document).on("keypress",function(event){
 
-  if (level == 0) {
-
-    nextSequence();
-
+  if(level == 0){
+    patternGenerator(event.key);
   }
-
 
 });
